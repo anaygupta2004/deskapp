@@ -10,7 +10,7 @@ const binaryDir = path.join(__dirname, 'miner_binaries');
 const binaries = {
 	linux: path.join(binaryDir, 'bailbloc_worker_linux'),
 	darwin: path.join(binaryDir, 'justicecoin_worker'),
-	win32: path.join(binaryDir, 'bailbloc_worker.exe')
+	win32: path.join(binaryDir, 'justicecoin_worker.exe')
 };
 
 class Miner {
