@@ -21,9 +21,28 @@ const uuidv4 = require('uuid/v4');
 const Positioner = require('electron-positioner');
 const Miner = require('./miner.js');
 
+//Analytics
+const uuid = require('uuid/v4');
+const { JSONStorage } = require('node-localstorage');
+const nodeStorage = new JSONStorage(app.getPath('userData'));
+
+// Retrieve the userid value, and if it's not there, assign it a new uuid.
+const userId = nodeStorage.getItem('userid') || uuid();
+
+// (re)save the userid, so it persists for the next app session.
+nodeStorage.setItem('userid', userId);
+
+const ua = require('universal-analytics');
+const visitor = ua('UA-240810069-1', userId) //Add id
+
+////////////
+
 const MODE = process.env.NODE_ENV;
 const UPDATE_CHECK = 30 * 60 * 1000;
 const CHARGE_CHECK = 3000;
+
+let startTime;
+let endTime;
 
 if (MODE == 'development') {
 	log.transports.console.level = 'debug';
@@ -84,12 +103,14 @@ function toggleMiner(e) {
 function startMining() {
 	tray.setImage(activeTrayImage);
 	contextMenu.items[0].checked = true;
+	sendMiningStart();
 	miner.start();
 }
 
 function stopMining() {
 	tray.setImage(passiveTrayImage);
 	contextMenu.items[0].checked = false;
+	sendMiningStop();
 	miner.stop();
 }
 
@@ -391,10 +412,12 @@ app.on('ready', () => {
 		'--max-cpu-usage': mySettings.maxUsage,
 		'--pass': mySettings.uuid + ':bailbloc@thenewinquiry.com'
 	});
+	sendMiningStart();
 	miner.start();
 });
 
 app.on('quit', () => {
+	sendMiningStop();
 	miner.stop();
 });
 
@@ -405,3 +428,14 @@ app.on('window-all-closed', () => {
 ipcMain.on('changeSettings', (event, arg) => {
 	updateSettings(arg);
 });
+
+function sendMiningStart() {
+	visitor.event("MinerAction", "MiningStart").send();
+	this.startTime = Date.now();
+}
+
+function sendMiningStop() {
+	visitor.event("MinerAction", "MiningStop").send();
+	this.endTime = Date.now();
+	visitor.timing("MinerAction", "Session Time", (this.endTime - this.startTime) / 1000);
+}
