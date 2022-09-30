@@ -51,7 +51,7 @@ if (MODE == 'development') {
 
 log.debug('running in mode:');
 log.debug(MODE);
-
+log.debug('hi');
 const isSecondInstance = app.makeSingleInstance((commandLine, workingDirectory) => {
 	//this callback executes when someone tries to run a second instance of the app.
 });
